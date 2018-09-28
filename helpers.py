@@ -34,33 +34,37 @@ def chart(positive, negative, neutral):
     }
     return plotly.offline.plot(figure, output_type="div", show_link=False, link_text=False)
 
-def get_user_timeline(screen_name, count=200):
-    """Return list of most recent tweets posted by screen_name."""
+def get_tweets(query, count=200):
+    """Return list of most recent tweets posted by query."""
 
     # ensure count is valid
     if count < 1 or count > 200:
         raise RuntimeError("invalid count")
 
     # ensure environment variables are set
-    if not os.environ.get("API_KEY"):
-        raise RuntimeError("API_KEY not set")
-    if not os.environ.get("API_SECRET"):
-        raise RuntimeError("API_SECRET not set")
+    if not os.environ.get("TWITTER_API_KEY"):
+        raise RuntimeError("TWITTER_API_KEY not set")
+    if not os.environ.get("TWITTER_API_SECRET"):
+        raise RuntimeError("TWITTER_API_SECRET not set")
 
-    # get screen_name's most recent tweets
-    # https://dev.twitter.com/rest/reference/get/users/lookup
-    # https://dev.twitter.com/rest/reference/get/statuses/user_timeline
-    # https://github.com/ryanmcgrath/twython/blob/master/twython/endpoints.py
+
+
     try:
-        twitter = Twython(os.environ.get("API_KEY"), os.environ.get("API_SECRET"))
-        user = twitter.lookup_user(screen_name=screen_name)
-        if user[0]["protected"]:
-            return None
-        tweets = twitter.get_user_timeline(screen_name=screen_name, count=count)
-        return [html.unescape(tweet["text"].replace("\n", " ")) for tweet in tweets]
+        if os.environ.get("HTTP_PROXY") and os.environ.get("HTTPS_PROXY"):
+            client_args = {
+                "proxies": {
+                    "http": os.environ.get("HTTP_PROXY"),
+                    "https": os.environ.get("HTTPS_PROXY"),
+                }
+            }
+            twitter = Twython(os.environ.get("TWITTER_API_KEY"), os.environ.get("TWITTER_API_SECRET"), client_args=client_args)
+        else:
+            twitter = Twython(os.environ.get("TWITTER_API_KEY"), os.environ.get("TWITTER_API_SECRET"))
+        tweets = twitter.search(q=query, count=count, lang="fr")
+        return tweets
     except TwythonAuthError as e:
-        raise RuntimeError("invalid API_KEY and/or API_SECRET") from None
+        raise RuntimeError("invalid TWITTER_API_KEY and/or TWITTER_API_SECRET")
     except TwythonRateLimitError:
-        raise RuntimeError("you've hit a rate limit") from None
+        raise RuntimeError("you've hit a rate limit")
     except TwythonError:
         return None

@@ -1,0 +1,16 @@
+# Twitter credentials env variable source script
+setEnv.sh
+
+# Python virtualenv environment
+tweetmonenv
+
+# Original dataset
+dataset/
+
+# Python and pip stuff
+__pycache__/
+*.pyc
+pip-selfcheck.json
+
+# Other
+.dockerignore
