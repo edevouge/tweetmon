@@ -1,5 +1,7 @@
-Flask
+schedule
+flask
 nltk
 plotly
 termcolor
 twython
+gunicorn[gevent]
